@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+
 import sys
 
 # Import and run the memory-efficient aggregate function
