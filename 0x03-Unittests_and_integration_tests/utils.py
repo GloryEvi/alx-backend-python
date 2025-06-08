@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Callable
 import requests
+from functools import wraps
 
 
 def access_nested_map(nested_map: Dict, path: Tuple[str]) -> Any:
@@ -17,3 +18,14 @@ def access_nested_map(nested_map: Dict, path: Tuple[str]) -> Any:
 def get_json(url: str) -> Dict:
     response = requests.get(url)
     return response.json()
+
+
+def memoize(func: Callable) -> Callable:
+    
+    @wraps(func)
+    def wrapper(self):
+        attr_name = f"_{func.__name__}"
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, func(self))
+        return getattr(self, attr_name)
+    return wrapper
