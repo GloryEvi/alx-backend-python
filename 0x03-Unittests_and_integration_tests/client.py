@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-This module provides a client for interacting with GitHub organization data
+Provide a client for interacting with GitHub organization data
 through the GitHub API.
 """
 
@@ -32,3 +32,13 @@ class GithubOrgClient:
         """
         url = self.ORG_URL.format(org=self._org_name)
         return get_json(url)
+    
+    @property
+    def _public_repos_url(self) -> str:
+        """
+        Get the public repositories URL for the organization.
+        
+        Returns:
+            URL string for accessing the organization's public repositories
+        """
+        return self.org["repos_url"]
