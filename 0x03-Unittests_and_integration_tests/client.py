@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Provide a client for interacting with GitHub organization data
+client for interacting with GitHub organization data
 through the GitHub API.
 """
-
-from typing import Dict
+from typing import Dict, List
 from utils import get_json, memoize
 
 
@@ -42,3 +41,13 @@ class GithubOrgClient:
             URL string for accessing the organization's public repositories
         """
         return self.org["repos_url"]
+    
+    def public_repos(self) -> List[str]:
+        """
+        Get list of public repository names for the organization.
+        
+        Returns:
+            List of repository names
+        """
+        repos_data = get_json(self._public_repos_url)
+        return [repo["name"] for repo in repos_data]
