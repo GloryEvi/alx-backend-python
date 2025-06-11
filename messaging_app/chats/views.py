@@ -7,11 +7,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import User, Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
-from .permissions import IsParticipant
+from .permissions import IsParticipantOfConversation
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated, IsParticipant]
+    permission_classes = [IsParticipantOfConversation]
     
     def get_queryset(self):
         return Conversation.objects.filter(participants=self.request.user)
@@ -22,7 +22,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated, IsParticipant]
+    permission_classes = [IsParticipantOfConversation]
     
     def get_queryset(self):
         user_conversations = Conversation.objects.filter(participants=self.request.user)
