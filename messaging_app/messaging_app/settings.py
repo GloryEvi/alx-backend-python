@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'chats',
     'rest_framework_simplejwt',
+    'django_filters',
 ]
 
 REST_FRAMEWORK = {
@@ -52,6 +53,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
         'chats.permissions.IsParticipantOfConversation',
     ],
+     'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ]
 }
 
 from datetime import timedelta

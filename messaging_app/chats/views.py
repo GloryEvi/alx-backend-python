@@ -5,9 +5,12 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import User, Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsParticipantOfConversation
+from .pagination import MessagePagination
+from .filters import MessageFilter
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
@@ -23,10 +26,13 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [IsParticipantOfConversation]
+    pagination_class = MessagePagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = MessageFilter
     
     def get_queryset(self):
         user_conversations = Conversation.objects.filter(participants=self.request.user)
-        return Message.objects.filter(conversation__in=user_conversations)
+        return Message.objects.filter(conversation__in=user_conversations).order_by('-timestamp')
     
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
