@@ -150,6 +150,88 @@ class OffensiveLanguageMiddleware:
         ]
 
 
+class RolePermissionMiddleware:
+    """
+    Middleware that checks the user's role before allowing access to specific actions.
+    Only allows access to admin or moderator users for certain endpoints.
+    """
+    
+    def __init__(self, get_response):
+        """
+        Initialize the middleware.
+        
+        Args:
+            get_response: The next middleware or view in the chain
+        """
+        self.get_response = get_response
+        # Define protected paths that require admin/moderator access
+        self.protected_paths = [
+            '/admin/',
+        ]
+    
+    def __call__(self, request):
+        """
+        Check the user's role from the request and restrict access if necessary.
+        
+        Args:
+            request: The HTTP request object
+            
+        Returns:
+            403 Forbidden if user is not admin/moderator for protected paths
+        """
+        # Check if the request path requires role-based protection
+        if self.is_protected_path(request.path):
+            # Check if user is authenticated
+            if not hasattr(request, 'user') or not request.user.is_authenticated:
+                return HttpResponseForbidden("Authentication required to access this resource.")
+            
+            # Check if user has admin or moderator role
+            if not self.has_required_role(request.user):
+                return HttpResponseForbidden("Access denied. Admin or moderator role required.")
+        
+        # Continue processing the request
+        response = self.get_response(request)
+        
+        return response
+    
+    def is_protected_path(self, path):
+        """
+        Check if the given path requires role-based protection.
+        
+        Args:
+            path: The request path
+            
+        Returns:
+            bool: True if path is protected, False otherwise
+        """
+        return any(path.startswith(protected_path) for protected_path in self.protected_paths)
+    
+    def has_required_role(self, user):
+        """
+        Check if user has admin or moderator role.
+        
+        Args:
+            user: The user object
+            
+        Returns:
+            bool: True if user is admin or moderator, False otherwise
+        """
+        # Check if user is superuser (admin)
+        if user.is_superuser or user.is_staff:
+            return True
+        
+        # Check for custom role field (if exists)
+        if hasattr(user, 'role'):
+            return user.role in ['admin', 'moderator']
+        
+        # Check for groups-based roles
+        if hasattr(user, 'groups'):
+            user_groups = user.groups.values_list('name', flat=True)
+            return any(group.lower() in ['admin', 'moderator'] for group in user_groups)
+        
+        return False
+
+
 class RestrictAccessByTimeMiddleware:
     """
     Middleware that restricts access to the messaging app during certain hours.
@@ -179,7 +261,7 @@ class RestrictAccessByTimeMiddleware:
         current_hour = datetime.now().hour
         
         # Check if current time is outside allowed hours (6PM to 9PM = 18 to 21)
-        if current_hour < 3 or current_hour >= 6:
+        if current_hour < 1 or current_hour >= 6:
             return HttpResponseForbidden("Access to the messaging app is restricted. Please try again between 6PM and 9PM.")
         
         # Continue processing the request if within allowed hours
