@@ -1,8 +1,9 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.conf import settings
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
+from collections import defaultdict
 
 # Configure logger for request logging
 logger = logging.getLogger('request_logger')
@@ -60,6 +61,95 @@ class RequestLoggingMiddleware:
         return response
 
 
+class OffensiveLanguageMiddleware:
+    """
+    Middleware that limits the number of chat messages a user can send 
+    within a certain time window, based on their IP address.
+    Allows 5 messages per minute per IP address.
+    """
+    
+    def __init__(self, get_response):
+        """
+        Initialize the middleware.
+        
+        Args:
+            get_response: The next middleware or view in the chain
+        """
+        self.get_response = get_response
+        # Dictionary to store IP addresses and their request timestamps
+        self.ip_requests = defaultdict(list)
+        # Rate limit settings
+        self.max_requests = 5  # Maximum requests per time window
+        self.time_window = 60  # Time window in seconds (1 minute)
+    
+    def __call__(self, request):
+        """
+        Count the number of POST requests (messages) from each IP address
+        and implement rate limiting.
+        
+        Args:
+            request: The HTTP request object
+            
+        Returns:
+            429 Too Many Requests if limit exceeded, otherwise normal response
+        """
+        # Only apply rate limiting to POST requests (messages)
+        if request.method == 'POST':
+            # Get client IP address
+            ip_address = self.get_client_ip(request)
+            current_time = datetime.now()
+            
+            # Clean old requests outside the time window
+            self.cleanup_old_requests(ip_address, current_time)
+            
+            # Check if IP has exceeded the rate limit
+            if len(self.ip_requests[ip_address]) >= self.max_requests:
+                response = HttpResponse(
+                    f"Rate limit exceeded. You can only send {self.max_requests} messages per minute. Please try again later.",
+                    status=429
+                )
+                return response
+            
+            # Add current request timestamp
+            self.ip_requests[ip_address].append(current_time)
+        
+        # Continue processing the request
+        response = self.get_response(request)
+        
+        return response
+    
+    def get_client_ip(self, request):
+        """
+        Get the client's IP address from the request.
+        
+        Args:
+            request: The HTTP request object
+            
+        Returns:
+            str: Client IP address
+        """
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    def cleanup_old_requests(self, ip_address, current_time):
+        """
+        Remove requests that are outside the time window.
+        
+        Args:
+            ip_address: The IP address to clean up
+            current_time: Current datetime
+        """
+        cutoff_time = current_time - timedelta(seconds=self.time_window)
+        self.ip_requests[ip_address] = [
+            timestamp for timestamp in self.ip_requests[ip_address]
+            if timestamp > cutoff_time
+        ]
+
+
 class RestrictAccessByTimeMiddleware:
     """
     Middleware that restricts access to the messaging app during certain hours.
@@ -89,7 +179,7 @@ class RestrictAccessByTimeMiddleware:
         current_hour = datetime.now().hour
         
         # Check if current time is outside allowed hours (6PM to 9PM = 18 to 21)
-        if current_hour < 18 or current_hour >= 21:
+        if current_hour < 3 or current_hour >= 6:
             return HttpResponseForbidden("Access to the messaging app is restricted. Please try again between 6PM and 9PM.")
         
         # Continue processing the request if within allowed hours
