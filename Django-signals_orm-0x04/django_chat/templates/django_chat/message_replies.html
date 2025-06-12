@@ -1,0 +1,10 @@
+{% for reply in replies %}
+    <div class="reply message">
+        <strong>{{ reply.user.username }}:</strong> {{ reply.content }}
+        <small>({{ reply.created_at }})</small>
+        
+        {% if reply.replies.all %}
+            {% include 'django_chat/message_replies.html' with replies=reply.replies.all %}
+        {% endif %}
+    </div>
+{% endfor %}

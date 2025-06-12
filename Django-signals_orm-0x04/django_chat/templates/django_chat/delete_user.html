@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Account</title>
+</head>
+<body>
+    <h2>Delete Your Account</h2>
+    
+    <p>Are you sure you want to delete your account, {{ user.username }}?</p>
+    <p><strong>Warning:</strong> This action cannot be undone. All your messages and data will be permanently deleted.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Delete My Account</button>
+        <a href="{% url 'admin:index' %}">Cancel</a>
+    </form>
+</body>
+</html>

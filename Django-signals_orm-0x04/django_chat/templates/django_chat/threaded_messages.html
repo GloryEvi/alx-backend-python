@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Threaded Messages</title>
+    <style>
+        .reply { margin-left: 20px; border-left: 2px solid #ccc; padding-left: 10px; }
+        .message { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Threaded Conversations</h2>
+    
+    {% for message in messages %}
+        <div class="message">
+            <strong>{{ message.user.username }}:</strong> {{ message.content }}
+            <small>({{ message.created_at }})</small>
+            
+            {% if message.replies.all %}
+                {% include 'django_chat/message_replies.html' with replies=message.replies.all %}
+            {% endif %}
+        </div>
+    {% endfor %}
+</body>
+</html>

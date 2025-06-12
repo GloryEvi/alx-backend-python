@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Unread Messages</title>
+</head>
+<body>
+    <h2>Your Unread Messages</h2>
+    
+    {% if unread_messages %}
+        {% for message in unread_messages %}
+            <div class="message">
+                <strong>From: {{ message.user.username }}</strong><br>
+                <p>{{ message.content }}</p>
+                <small>{{ message.created_at }}</small>
+            </div>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No unread messages!</p>
+    {% endif %}
+</body>
+</html>

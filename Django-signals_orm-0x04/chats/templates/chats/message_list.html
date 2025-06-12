@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Messages</title>
+</head>
+<body>
+    <h2>Messages (Cached for 60 seconds)</h2>
+    
+    {% for message in messages %}
+        <div>
+            <strong>{{ message.user.username }}:</strong> {{ message.content }}
+            <small>({{ message.created_at }})</small>
+        </div>
+    {% endfor %}
+</body>
+</html>
