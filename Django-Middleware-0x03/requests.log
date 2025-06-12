@@ -17,3 +17,8 @@
 2025-06-12 04:30:30.732663 - User: GloryEvi - Path: /api/messages/
 2025-06-12 04:30:45.239641 - User: GloryEvi - Path: /api/conversations
 2025-06-12 04:30:45.263929 - User: GloryEvi - Path: /api/conversations/
+2025-06-12 04:31:48.107634 - User: GloryEvi - Path: /api/Users
+2025-06-12 04:32:25.582506 - User: GloryEvi - Path: /auth
+2025-06-12 04:32:35.556664 - User: GloryEvi - Path: /auth/login
+2025-06-12 04:32:56.320749 - User: GloryEvi - Path: /auth/register
+2025-06-12 04:42:50.417801 - User: GloryEvi - Path: /admin/
