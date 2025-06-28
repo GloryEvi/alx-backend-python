@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql
+      - messaging_mysql_data:/var/lib/mysql
     ports:
       - "3306:3306"
     healthcheck:
@@ -35,4 +35,5 @@ services:
         condition: service_healthy
 
 volumes:
-  mysql_data:
+  messaging_mysql_data:
+    driver: local
