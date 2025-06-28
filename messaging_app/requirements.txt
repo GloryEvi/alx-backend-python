@@ -26,8 +26,8 @@ phonenumbers==8.13.25
 Pillow==10.1.0
 requests==2.31.0
 
-# Development dependencies
+
 django-extensions==3.2.3
 
-# Production server
+
 gunicorn==21.2.0
