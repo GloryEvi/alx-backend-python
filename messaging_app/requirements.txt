@@ -5,6 +5,7 @@ django-filter==23.3
 
 # Database
 psycopg2-binary==2.9.7
+mysqlclient==2.2.0
 
 # API documentation
 drf-yasg==1.21.7
@@ -26,8 +27,8 @@ phonenumbers==8.13.25
 Pillow==10.1.0
 requests==2.31.0
 
-
+# Development dependencies
 django-extensions==3.2.3
 
-
+# Production server
 gunicorn==21.2.0
