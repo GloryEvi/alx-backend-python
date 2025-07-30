@@ -1,0 +1,30 @@
+#!/bin/bash
+
+echo "=== Scaling Django App to 3 replicas ==="
+kubectl scale deployment messaging-app-deployment --replicas=3
+
+echo "=== Waiting for pods to be ready ==="
+sleep 10
+
+echo "=== Verifying multiple pods are running ==="
+kubectl get pods
+
+echo "=== Setting up port forwarding for load testing ==="
+kubectl port-forward service/messaging-app-service 8000:8000 &
+PORTFORWARD_PID=$!
+
+echo "=== Waiting for port forwarding to establish ==="
+sleep 5
+
+echo "=== Performing load testing with wrk ==="
+echo "Running 30-second load test with 2 threads and 10 connections..."
+wrk -t2 -c10 -d30s http://localhost:8000/
+
+echo "=== Monitoring Resource Usage ==="
+kubectl top nodes
+kubectl top pods
+
+echo "=== Cleaning up port forwarding ==="
+kill $PORTFORWARD_PID
+
+echo "=== Load testing and scaling complete ==="
