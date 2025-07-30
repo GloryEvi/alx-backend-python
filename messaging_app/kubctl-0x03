@@ -1,0 +1,80 @@
+#!/bin/bash
+
+echo "=== Rolling Update Script for Django Messaging App ==="
+
+# Get minikube IP for testing
+MINIKUBE_IP=$(minikube ip)
+echo "Minikube IP: $MINIKUBE_IP"
+
+echo "=== Step 1: Show current deployment status ==="
+kubectl get deployments
+kubectl get pods -l app=messaging-app
+
+echo "=== Step 2: Start continuous testing (background process) ==="
+# Create a function to continuously test the app
+test_app_continuously() {
+    local counter=0
+    local success_count=0
+    local error_count=0
+    
+    echo "Starting continuous testing..."
+    while [ $counter -lt 60 ]; do
+        response=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: messaging-app.local" http://$MINIKUBE_IP/ 2>/dev/null)
+        if [ "$response" = "200" ] || [ "$response" = "404" ]; then
+            success_count=$((success_count + 1))
+            echo "Test $counter: SUCCESS ($response)"
+        else
+            error_count=$((error_count + 1))
+            echo "Test $counter: ERROR ($response)"
+        fi
+        counter=$((counter + 1))
+        sleep 2
+    done
+    
+    echo "=== Testing Summary ==="
+    echo "Total tests: $counter"
+    echo "Successful: $success_count"
+    echo "Errors: $error_count"
+    echo "Success rate: $(echo "scale=2; $success_count * 100 / $counter" | bc)%"
+}
+
+# Start continuous testing in background
+test_app_continuously &
+TEST_PID=$!
+
+echo "=== Step 3: Apply updated deployment (trigger rolling update) ==="
+kubectl apply -f blue_deployment.yaml
+
+echo "=== Step 4: Monitor rolling update progress ==="
+kubectl rollout status deployment/messaging-app-blue --timeout=300s
+
+echo "=== Step 5: Wait for testing to complete ==="
+wait $TEST_PID
+
+echo "=== Step 6: Verify rolling update is complete ==="
+echo "Current deployment status:"
+kubectl get deployments
+
+echo "Current pods:"
+kubectl get pods -l app=messaging-app -o wide
+
+echo "Pod details with image versions:"
+kubectl describe pods -l app=messaging-app | grep -E "(Name:|Image:)"
+
+echo "=== Step 7: Check rollout history ==="
+kubectl rollout history deployment/messaging-app-blue
+
+echo "=== Step 8: Final connectivity test ==="
+echo "Testing final connectivity..."
+for i in {1..5}; do
+    response=$(curl -s -H "Host: messaging-app.local" http://$MINIKUBE_IP/)
+    if echo "$response" | grep -q "DEBUG"; then
+        echo "Test $i: App is responding"
+    else
+        echo "Test $i: App may have issues"
+    fi
+    sleep 1
+done
+
+echo "=== Rolling Update Complete ==="
+echo "All pods should now be running the v2.0 image"
