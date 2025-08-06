@@ -31,5 +31,6 @@ requests==2.31.0
 django-extensions==3.2.3
 
 # Production server
-gunicorn==21.2.0pytest==7.4.3
+gunicorn==21.2.0
+pytest==7.4.3
 pytest-html==4.1.1
