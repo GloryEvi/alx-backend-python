@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'github-credentials', 
+                    url: 'https://github.com/GloryEvi/alx-backend-python.git',
+                    branch: 'main'
+            }
+        }
+        
+        stage('Setup Python Environment') {
+            steps {
+                sh '''
+                    cd messaging_app
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                sh '''
+                    cd messaging_app
+                    . venv/bin/activate
+                    pytest --junitxml=test-results.xml --html=test-report.html --self-contained-html
+                '''
+            }
+        }
+        
+        stage('Generate Test Report') {
+            steps {
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'messaging_app',
+                    reportFiles: 'test-report.html',
+                    reportName: 'Test Report'
+                ])
+                
+                junit 'messaging_app/test-results.xml'
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
