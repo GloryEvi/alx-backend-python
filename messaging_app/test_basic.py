@@ -1,6 +1,12 @@
-import pytest
+import os
+import django
+from django.conf import settings
 from django.test import TestCase
 from django.contrib.auth.models import User
+
+# Configure Django settings
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'messaging_app.settings')
+django.setup()
 
 class BasicTests(TestCase):
     def test_user_creation(self):
