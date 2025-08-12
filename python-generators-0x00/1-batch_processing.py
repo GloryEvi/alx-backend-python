@@ -1,5 +1,3 @@
-
-
 import mysql.connector
 from mysql.connector import Error
 
@@ -28,7 +26,7 @@ def stream_users_in_batches(batch_size):
             while True:
                 batch = cursor.fetchmany(batch_size)
                 if not batch:
-                    break
+                    return  # Generator return when no more data
                 
                 # Convert Decimal age to int for each user in batch
                 processed_batch = []
@@ -41,6 +39,7 @@ def stream_users_in_batches(batch_size):
                 
     except Error as e:
         print(f"Error while connecting to MySQL: {e}")
+        return  # Return on error
         
     finally:
         # Clean up resources
@@ -49,14 +48,29 @@ def stream_users_in_batches(batch_size):
         if connection and connection.is_connected():
             connection.close()
 
+def get_batch_count(batch_size):
+    """
+    Helper function that returns the total number of batches
+    Uses the generator to count batches and returns the result
+    """
+    batch_count = 0
+    for batch in stream_users_in_batches(batch_size):
+        batch_count += 1
+    return batch_count  # Explicit return statement
+
 def batch_processing(batch_size):
     """
     Processes each batch to filter users over the age of 25
-    Prints each filtered user
+    Prints each filtered user and returns the count of filtered users
     """
+    filtered_count = 0
+    
     # LOOP 3: Process each batch and filter users over 25
     for batch in stream_users_in_batches(batch_size):
         for user in batch:
             if user['age'] > 25:
                 print(user)
                 print()  # Add empty line as shown in expected output
+                filtered_count += 1
+    
+    return filtered_count  # Return the count of filtered users
